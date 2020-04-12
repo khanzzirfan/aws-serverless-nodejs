@@ -13,123 +13,139 @@ var router = require("express").Router();
 
 let amadeus = new Amadeus({
   clientId: process.env.AMADEUS_CLIENT_ID,
-  clientSecret: process.env.AMADEUS_CLIENT_SECRET
+  clientSecret: process.env.AMADEUS_CLIENT_SECRET,
 });
 
 // flight inspiration search
-router.get("/flight-destinations", function(req, res, next) {
+router.get("/flight-destinations", function (req, res) {
   return amadeus.shopping.flightDestinations
     .get({
-      origin: "SYD"
+      origin: "SYD",
     })
-    .then(function(response) {
+    .then(function (response) {
       const { data } = response;
       console.log("received data", data);
-      const firstSet = data[0];
-      return res.status(200).json(firstSet);
+      return res.status(200).json(data);
     })
-    .catch(function(responseError) {
+    .catch(function (responseError) {
       console.log(responseError.code);
       throw new Error(responseError.code);
     });
 });
 
 // v1/ flight low fare search
-router.get("/flight-offers", function(req, res, next) {
+router.get("/flight-offers", function (req, res) {
   return amadeus.shopping.flightOffers
     .get({
       origin: "NYC",
       destination: "MAD",
-      departureDate: "2020-08-01"
+      departureDate: "2020-08-01",
     })
-    .then(function(response) {
+    .then(function (response) {
       const { data } = response;
       console.log("received data", data);
-      const firstSet = data[0];
-      return res.status(200).json(firstSet);
+      return res.status(200).json(data);
     })
-    .catch(function(responseError) {
+    .catch(function (responseError) {
       console.log(responseError.code);
       throw new Error(responseError.code);
     });
 });
 
 // flight cheapest dates
-router.get("/flight-dates", function(req, res, next) {
+router.get("/flight-dates", function (req, res) {
   return amadeus.shopping.flightDates
     .get({
       origin: "NYC",
-      destination: "MAD"
+      destination: "MAD",
     })
-    .then(function(response) {
+    .then(function (response) {
       const { data } = response;
       console.log("received data", data);
-      const firstSet = data[0];
-      return res.status(200).json(firstSet);
+      return res.status(200).json(data);
     })
-    .catch(function(responseError) {
+    .catch(function (responseError) {
       console.log(responseError.code);
       throw new Error(responseError.code);
     });
 });
 
 // flight offer search
-router.get("/v2/flight-offers", function(req, res, next) {
+router.get("/v2/flight-offers", function (req, res) {
+  const {
+    query: {
+      origin,
+      destination,
+      departDate,
+      returnDate,
+      currencyCode,
+      adults,
+    },
+  } = req;
   return amadeus.shopping.flightOffersSearch
     .get({
-      originLocationCode: "SYD",
-      destinationLocationCode: "BKK",
-      departureDate: "2020-08-01",
-      adults: "2"
+      originLocationCode: origin,
+      destinationLocationCode: destination,
+      departureDate: departDate,
+      adults,
+      currencyCode,
     })
-    .then(function(response) {
+    .then(function (response) {
       const { data } = response;
       console.log("received data", data);
-      const firstSet = data[0];
-      return res.status(200).json(firstSet);
+      return res.status(200).json(data);
     })
-    .catch(function(responseError) {
+    .catch(function (responseError) {
       console.log(responseError.code);
       throw new Error(responseError.code);
     });
 });
 
-router.post("/flight-offers", function(req, res, next) {
+// post flight offers
+router.post("/v2/flight-offers", function (req, res) {
+  const { body } = req;
+  if (!body) {
+    throw new Error(" Not a valid request");
+  }
+
+  const { origin, destination, departDate, returnDate, currencyCode, adults } =
+    body || {};
+
   return amadeus.shopping.flightOffersSearch
-    .get(
+    .post(
       JSON.stringify({
-        currencyCode: "USD",
+        currencyCode: currencyCode,
         originDestinations: [
           {
             id: "1",
-            originLocationCode: "RIO",
-            destinationLocationCode: "MAD",
+            originLocationCode: origin,
+            destinationLocationCode: destination,
             departureDateTimeRange: {
-              date: "2020-03-01",
-              time: "10:00:00"
-            }
+              date: departDate,
+              time: "10:00:00",
+            },
           },
           {
             id: "2",
-            originLocationCode: "MAD",
-            destinationLocationCode: "RIO",
+            originLocationCode: destination,
+            destinationLocationCode: origin,
             departureDateTimeRange: {
-              date: "2020-03-05",
-              time: "17:00:00"
-            }
-          }
+              date: returnDate,
+              time: "17:00:00",
+            },
+          },
         ],
         travelers: [
           {
             id: "1",
             travelerType: "ADULT",
-            fareOptions: ["STANDARD"]
+            fareOptions: ["STANDARD"],
           },
           {
             id: "2",
             travelerType: "CHILD",
-            fareOptions: ["STANDARD"]
-          }
+            fareOptions: ["STANDARD"],
+          },
         ],
         sources: ["GDS"],
         searchCriteria: {
@@ -139,77 +155,73 @@ router.post("/flight-offers", function(req, res, next) {
               {
                 cabin: "BUSINESS",
                 coverage: "MOST_SEGMENTS",
-                originDestinationIds: ["1"]
-              }
+                originDestinationIds: ["1"],
+              },
             ],
             carrierRestrictions: {
-              excludedCarrierCodes: ["AA", "TP", "AZ"]
-            }
-          }
-        }
+              excludedCarrierCodes: ["AA", "TP", "AZ"],
+            },
+          },
+        },
       })
     )
-    .then(function(response) {
+    .then(function (response) {
       const { data } = response;
       console.log("received data", data);
-      const firstSet = data[0];
-      return res.status(200).json(firstSet);
+      return res.status(200).json(data);
     })
-    .catch(function(responseError) {
-      console.log(responseError.code);
+    .catch(function (responseError) {
+      console.log(responseError);
       throw new Error(responseError.code);
     });
 });
 
 // flight offer pricing
-router.post("/flight-offer-pricing", function(req, res, next) {
+router.post("/flight-offer-pricing", function (req, res) {
   return amadeus.shopping.flightDestinations
     .get({
-      origin: "SYD"
+      origin: "SYD",
     })
-    .then(function(response) {
+    .then(function (response) {
       const { data } = response;
       console.log("received data", data);
-      const firstSet = data[0];
-      return res.status(200).json(firstSet);
+      return res.status(200).json(data);
     })
-    .catch(function(responseError) {
+    .catch(function (responseError) {
       console.log(responseError.code);
       throw new Error(responseError.code);
     });
 });
 
 // flight seat maps display
-router.post("/seatmaps", function(req, res, next) {
+router.post("/seatmaps", function (req, res) {
   return amadeus.shopping.flightDestinations
     .get({
-      origin: "SYD"
+      origin: "SYD",
     })
-    .then(function(response) {
+    .then(function (response) {
       const { data } = response;
       console.log("received data", data);
-      const firstSet = data[0];
-      return res.status(200).json(firstSet);
+      return res.status(200).json(data);
     })
-    .catch(function(responseError) {
+    .catch(function (responseError) {
       console.log(responseError.code);
       throw new Error(responseError.code);
     });
 });
 
 // flight seat maps
-router.get("/seatmaps", function(req, res, next) {
+router.get("/seatmaps", function (req, res) {
   return amadeus.shopping.flightDestinations
     .get({
-      origin: "SYD"
+      origin: "SYD",
     })
-    .then(function(response) {
+    .then(function (response) {
       const { data } = response;
       console.log("received data", data);
-      const firstSet = data[0];
-      return res.status(200).json(firstSet);
+      return res.status(200).json(data);
     })
-    .catch(function(responseError) {
+    .catch(function (responseError) {
       console.log(responseError.code);
       throw new Error(responseError.code);
     });

@@ -4,7 +4,7 @@
   "description": "",
   "main": "create.js",
   "dependencies": {
-    "amadeus": "^3.5.0",
+    "amadeus": "^4.0.0",
     "aws-serverless-express": "^3.3.6",
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
