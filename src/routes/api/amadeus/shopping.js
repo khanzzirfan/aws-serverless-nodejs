@@ -7,6 +7,8 @@
 var Amadeus = require("amadeus");
 var router = require("express").Router();
 
+const { flightOfferMapResponse } = require("./responseMaps/flightOffersMap");
+
 // Epxpecting it to be replaced by environment variables;
 // clientId: "REPLACE_BY_YOUR_API_KEY",
 // clientSecret: "REPLACE_BY_YOUR_API_SECRET"
@@ -80,6 +82,14 @@ router.get("/v2/flight-offers", function (req, res) {
       returnDate,
       currencyCode,
       adults,
+      children,
+      infants,
+      travelClass = "ECONOMY",
+      includedAirlines,
+      excludedAirlines,
+      nonStop = false,
+      maxPrice,
+      max = 50,
     },
   } = req;
   return amadeus.shopping.flightOffersSearch
@@ -87,93 +97,113 @@ router.get("/v2/flight-offers", function (req, res) {
       originLocationCode: origin,
       destinationLocationCode: destination,
       departureDate: departDate,
-      adults,
+      returnDate,
       currencyCode,
+      adults,
+      children,
+      infants,
+      travelClass,
+      includedAirlines,
+      excludedAirlines,
+      nonStop,
+      maxPrice,
+      max,
     })
     .then(function (response) {
       const { data } = response;
+      const formattedData = flightOfferMapResponse(data);
       console.log("received data", data);
-      return res.status(200).json(data);
+      return res.status(200).json(formattedData);
     })
     .catch(function (responseError) {
-      console.log(responseError.code);
+      console.log(responseError);
       throw new Error(responseError.code);
     });
 });
 
 // post flight offers
 router.post("/v2/flight-offers", function (req, res) {
-  const { body } = req;
-  if (!body) {
-    throw new Error(" Not a valid request");
-  }
+  try {
+    const { body } = req;
+    if (!body) {
+      throw new Error(" Not a valid request");
+    }
 
-  const { origin, destination, departDate, returnDate, currencyCode, adults } =
-    body || {};
+    const {
+      origin,
+      destination,
+      departDate,
+      returnDate,
+      currencyCode,
+      adults,
+    } = body || {};
 
-  return amadeus.shopping.flightOffersSearch
-    .post(
-      JSON.stringify({
-        currencyCode: currencyCode,
-        originDestinations: [
-          {
-            id: "1",
-            originLocationCode: origin,
-            destinationLocationCode: destination,
-            departureDateTimeRange: {
-              date: departDate,
-              time: "10:00:00",
-            },
-          },
-          {
-            id: "2",
-            originLocationCode: destination,
-            destinationLocationCode: origin,
-            departureDateTimeRange: {
-              date: returnDate,
-              time: "17:00:00",
-            },
-          },
-        ],
-        travelers: [
-          {
-            id: "1",
-            travelerType: "ADULT",
-            fareOptions: ["STANDARD"],
-          },
-          {
-            id: "2",
-            travelerType: "CHILD",
-            fareOptions: ["STANDARD"],
-          },
-        ],
-        sources: ["GDS"],
-        searchCriteria: {
-          maxFlightOffers: 50,
-          flightFilters: {
-            cabinRestrictions: [
-              {
-                cabin: "BUSINESS",
-                coverage: "MOST_SEGMENTS",
-                originDestinationIds: ["1"],
+    return amadeus.shopping.flightOffersSearch
+      .post(
+        JSON.stringify({
+          currencyCode: currencyCode,
+          originDestinations: [
+            {
+              id: "1",
+              originLocationCode: origin,
+              destinationLocationCode: destination,
+              departureDateTimeRange: {
+                date: departDate,
+                time: "10:00:00",
               },
-            ],
-            carrierRestrictions: {
-              excludedCarrierCodes: ["AA", "TP", "AZ"],
+            },
+            {
+              id: "2",
+              originLocationCode: destination,
+              destinationLocationCode: origin,
+              departureDateTimeRange: {
+                date: returnDate,
+                time: "17:00:00",
+              },
+            },
+          ],
+          travelers: [
+            {
+              id: "1",
+              travelerType: "ADULT",
+              fareOptions: ["STANDARD"],
+            },
+            {
+              id: "2",
+              travelerType: "CHILD",
+              fareOptions: ["STANDARD"],
+            },
+          ],
+          sources: ["GDS"],
+          searchCriteria: {
+            maxFlightOffers: 50,
+            flightFilters: {
+              cabinRestrictions: [
+                {
+                  cabin: "BUSINESS",
+                  coverage: "MOST_SEGMENTS",
+                  originDestinationIds: ["1"],
+                },
+              ],
+              carrierRestrictions: {
+                excludedCarrierCodes: ["AA", "TP", "AZ"],
+              },
             },
           },
-        },
+        })
+      )
+      .then(function (response) {
+        const { data } = response;
+        console.log("received data", data);
+        return res.status(200).json(data);
       })
-    )
-    .then(function (response) {
-      const { data } = response;
-      console.log("received data", data);
-      return res.status(200).json(data);
-    })
-    .catch(function (responseError) {
-      console.log(responseError);
-      throw new Error(responseError.code);
-    });
+      .catch(function (responseError) {
+        console.log(responseError);
+        throw new Error(responseError.code);
+      });
+  } catch (err) {
+    res.status(500).json({ error: "Internal error." });
+  }
 });
 
 // flight offer pricing
@@ -188,7 +218,7 @@ router.post("/flight-offer-pricing", function (req, res) {
       return res.status(200).json(data);
     })
     .catch(function (responseError) {
-      console.log(responseError.code);
+      console.log(responseError);
       throw new Error(responseError.code);
     });
 });
@@ -205,7 +235,7 @@ router.post("/seatmaps", function (req, res) {
       return res.status(200).json(data);
     })
     .catch(function (responseError) {
-      console.log(responseError.code);
+      console.log(responseError);
       throw new Error(responseError.code);
     });
 });
@@ -222,7 +252,7 @@ router.get("/seatmaps", function (req, res) {
       return res.status(200).json(data);
     })
     .catch(function (responseError) {
-      console.log(responseError.code);
+      console.log(responseError);
       throw new Error(responseError.code);
     });
 });

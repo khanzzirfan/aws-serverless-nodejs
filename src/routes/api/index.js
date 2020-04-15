@@ -20,15 +20,16 @@ router.use(awsServerlessExpressMiddleware.eventContext());
 router.use("/", require("./helloworld"));
 router.use("/users", require("./users"));
 router.use("/amadeus/shopping", require("./amadeus/shopping"));
+router.use("/v2/amadeus/reference-data", require("./amadeus/airports"));
 
-router.use(function(err, req, res, next) {
+router.use(function (err, req, res, next) {
   if (err.name === "ValidationError") {
     return res.status(422).json({
-      errors: Object.keys(err.errors).reduce(function(errors, key) {
+      errors: Object.keys(err.errors).reduce(function (errors, key) {
         errors[key] = err.errors[key].message;
 
         return errors;
-      }, {})
+      }, {}),
     });
   }
 
