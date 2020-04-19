@@ -110,10 +110,17 @@ router.get("/v2/flight-offers", function (req, res) {
       max,
     })
     .then(function (response) {
-      const { data } = response;
+      if (!response) {
+        return res.status(200).json([]);
+      }
+      const { data, dictionaries } = response.result;
+      console.log(dictionaries);
       const formattedData = flightOfferMapResponse(data);
-      console.log("received data", data);
-      return res.status(200).json(formattedData);
+      const result = {
+        ...dictionaries,
+        data: formattedData,
+      };
+      return res.status(200).json(result);
     })
     .catch(function (responseError) {
       console.log(responseError);
@@ -194,7 +201,6 @@ router.post("/v2/flight-offers", function (req, res) {
       )
       .then(function (response) {
         const { data } = response;
-        console.log("received data", data);
         return res.status(200).json(data);
       })
       .catch(function (responseError) {
@@ -214,7 +220,6 @@ router.post("/flight-offer-pricing", function (req, res) {
     })
     .then(function (response) {
       const { data } = response;
-      console.log("received data", data);
       return res.status(200).json(data);
     })
     .catch(function (responseError) {
@@ -231,7 +236,6 @@ router.post("/seatmaps", function (req, res) {
     })
     .then(function (response) {
       const { data } = response;
-      console.log("received data", data);
       return res.status(200).json(data);
     })
     .catch(function (responseError) {
@@ -248,7 +252,6 @@ router.get("/seatmaps", function (req, res) {
     })
     .then(function (response) {
       const { data } = response;
-      console.log("received data", data);
       return res.status(200).json(data);
     })
     .catch(function (responseError) {
