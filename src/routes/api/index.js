@@ -1,5 +1,5 @@
 var router = require("express").Router();
-// const cors = require("cors");
+const cors = require("cors");
 const compression = require("compression");
 const awsServerlessExpressMiddleware = require("aws-serverless-express/middleware");
 const bodyParser = require("body-parser");
@@ -12,7 +12,13 @@ if (process.env.NODE_ENV === "test") {
   router.use(compression());
 }
 
-router.use(cors());
+const corsOptions = {
+  origin: "http://localhost:3000",
+  credentials: true,
+};
+
+router.use(cors(corsOptions));
+router.options("*", cors(corsOptions));
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(awsServerlessExpressMiddleware.eventContext());

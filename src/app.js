@@ -2,6 +2,10 @@
 const express = require("express");
 const app = express();
 // const cors = require("cors");
+const dotenv = require("dotenv");
+// const { runEvery5secTask } = require("./services/cronService");
+
+dotenv.config();
 
 app.set("view engine", "pug");
 
@@ -51,16 +55,13 @@ app.use(function (err, req, res, next) {
 // The aws-serverless-express library creates a server and listens on a Unix
 // Domain Socket for you, so you can remove the usual call to app.listen.
 // finally, let's start our server...
-/*
-const dotenv = require("dotenv");
-dotenv.config();
 
+/* To run locally uncomment **/
+// runEvery5secTask();
 console.log("Starting server");
-var server = app.listen(3001, function () {
+var server = app.listen(8080, function () {
   console.log("Listening on port " + server.address().port);
 });
-*/
-// // app.use("/", router);
 
 // Export your express server so you can import it in the lambda function.
 module.exports = app;

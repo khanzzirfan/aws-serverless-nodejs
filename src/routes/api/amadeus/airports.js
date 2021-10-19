@@ -17,6 +17,14 @@ let amadeus = new Amadeus({
   clientSecret: process.env.AMADEUS_CLIENT_SECRET,
 });
 
+const mapResponseResult = (response) => {
+  if (!isEmpty(response)) {
+    const { data } = response;
+    return data;
+  }
+  return null;
+};
+
 // flight inspiration search
 router.get("/locations", function (req, res) {
   const {
@@ -32,20 +40,25 @@ router.get("/locations", function (req, res) {
       "page[offset]": pageOffset || 0,
     })
     .then((response) => {
-      const { data } = response;
-      resultData.concat(data);
-      console.log("received data", data);
+      const data = mapResponseResult(response);
+      if (!data) {
+        return res.status(200).json([]);
+      }
+      resultData = resultData.concat(data);
       return amadeus.next(response);
     })
     .then((nextResponse) => {
-      const { data } = nextResponse;
-      resultData.concat(data);
-      console.log("received next data", data);
+      const data = mapResponseResult(nextResponse);
+      if (!data) {
+        return res.status(200).json(resultData);
+      }
+      resultData = resultData.concat(data);
       return res.status(200).json(resultData);
     })
     .catch(function (responseError) {
       console.log(responseError);
-      throw new Error(responseError.code);
+      // throw new Error(responseError.code);
+      res.status(500).json("Internal server error");
     });
 });
 
