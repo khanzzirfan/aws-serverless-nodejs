@@ -15,8 +15,8 @@ provider:
         - dynamodb:DeleteItem
       Resource: "arn:aws:dynamodb:us-east-1:*:*"
   environment:
-    AMADEUS_CLIENT_ID: "IA564C4s6ciTyZ4WAF5JI9K4K0l03Soe"
-    AMADEUS_CLIENT_SECRET: "botcysSSVZYQmUvJ"
+    AMADEUS_CLIENT_ID: ""
+    AMADEUS_CLIENT_SECRET: ""
   timeout: 15
 
 functions:
